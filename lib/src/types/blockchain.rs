@@ -1,17 +1,16 @@
 use std::collections::{HashMap, HashSet};
 
+use super::{Block, Transaction, TransactionOutput};
 use crate::{
     error::{BtcError, Result},
     sha256::Hash,
-    types::{
-        block::Block,
-        transaction::{Transaction, TransactionOutput},
-    },
-    util::MerkleRoot,
+    util::{MerkleRoot, Savable},
 };
+
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::io::{Error as IoError, ErrorKind as IoErrorKind, Read, Result as IoResult, Write};
 
 use crate::U256;
 
@@ -22,6 +21,22 @@ pub struct Blockchain {
     blocks: Vec<Block>,
     #[serde(default, skip_serializing)]
     mempool: Vec<(DateTime<Utc>, Transaction)>,
+}
+
+impl Savable for Blockchain {
+    fn load<I: Read>(reader: I) -> IoResult<Self> {
+        ciborium::de::from_reader(reader).map_err(|_| {
+            IoError::new(
+                IoErrorKind::InvalidData,
+                "Failed to deserialize Transaction",
+            )
+        })
+    }
+
+    fn save<O: Write>(&self, writer: O) -> IoResult<()> {
+        ciborium::ser::into_writer(self, writer)
+            .map_err(|_| IoError::new(IoErrorKind::InvalidData, "Failed to serialize Transaction"))
+    }
 }
 
 impl Blockchain {
