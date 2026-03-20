@@ -23,17 +23,13 @@ pub struct Block {
 
 impl Savable for Block {
     fn load<I: Read>(reader: I) -> IoResult<Self> {
-        ciborium::de::from_reader(reader).map_err(|_| {
-            IoError::new(
-                IoErrorKind::InvalidData,
-                "Failed to deserialize Transaction",
-            )
-        })
+        ciborium::de::from_reader(reader)
+            .map_err(|_| IoError::new(IoErrorKind::InvalidData, "Failed to deserialize Block"))
     }
 
     fn save<O: Write>(&self, writer: O) -> IoResult<()> {
         ciborium::ser::into_writer(self, writer)
-            .map_err(|_| IoError::new(IoErrorKind::InvalidData, "Failed to serialize Transaction"))
+            .map_err(|_| IoError::new(IoErrorKind::InvalidData, "Failed to serialize Block"))
     }
 }
 
